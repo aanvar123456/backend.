@@ -1,6 +1,10 @@
 from datetime import datetime
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from django.forms.models import model_to_dict
+from django.http import FileResponse
+from django.conf import settings 
+import os
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
@@ -105,6 +109,16 @@ class ExpenceListView(ListCreateAPIView):
     
     def get_queryset(self):
         queryset = Expences.objects.all()
+        if(self.request.GET.get('start_date') == '' and self.request.GET.get('end_date') == ''):
+            queryset = queryset.filter(Date__month = datetime.now().month)
+        if (self.request.GET.get('start_date') != '' and self.request.GET.get('end_date') != ''):
+            queryset = queryset.filter(Date__gte = self.request.GET.get('start_date'), Date__lte = self.request.GET.get('end_date'))
+        if (self.request.GET.get('start_date') != ''):
+            queryset = queryset.filter(Date__gte = self.request.GET.get('start_date'))
+        if (self.request.GET.get('end_date') != ''):
+            queryset = queryset.filter(Date__lte = self.request.GET.get('end_date'))
+        if (self.request.GET.get('search') != ''):
+            queryset = queryset.filter(Purchase__icontains = self.request.GET.get('search'))
         return queryset
     
 
@@ -145,11 +159,22 @@ class ReturnListView(ListCreateAPIView):
     
     def get_queryset(self):
         queryset = Returns.objects.all()
+        if(self.request.GET.get('start_date') == '' and self.request.GET.get('end_date') == ''):
+            queryset = queryset.filter(Date__month = datetime.now().month)
+        if (self.request.GET.get('start_date') != '' and self.request.GET.get('end_date') != ''):
+            queryset = queryset.filter(Date__gte = self.request.GET.get('start_date'), Date__lte = self.request.GET.get('end_date'))
+        if (self.request.GET.get('start_date') != ''):
+            queryset = queryset.filter(Date__gte = self.request.GET.get('start_date'))
+        if (self.request.GET.get('end_date') != ''):
+            queryset = queryset.filter(Date__lte = self.request.GET.get('end_date'))
+        if (self.request.GET.get('search') != ''):
+            queryset = queryset.filter(Description__icontains = self.request.GET.get('search'))
         return queryset
     
 
     def post(self, request):
         data = request.data
+        data['Staff'] = model_to_dict(Staffs.objects.get(id = int(data['Staff'])))
         returns = ReturnSerializer(data=data)
         returns.is_valid()
         returns.save()
@@ -169,7 +194,7 @@ class ReturnDetailUpdateView(RetrieveUpdateDestroyAPIView):
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
-
+        data['Staff'] = model_to_dict(Staffs.objects.get(id = data['Staff']))
         returns = ReturnSerializer(instance, data=data)
         returns.is_valid()
         returns.save()
@@ -222,26 +247,27 @@ class ProductDetailUpdateView(RetrieveUpdateDestroyAPIView):
 class SalesView(APIView):
 
     def get(self, request):
-        current_month = request.GET.get('month', datetime.now().month)
+        current_month = self.request.GET.get('month', datetime.now().month)
         filtered_sales = get_filtered_sales(request, current_month)
         card_info = getSummary(filtered_sales, current_month)
 
-        data = {
-            'sales': filtered_sales,
-            'card_data': card_info
-        }
+        if (request.headers.get('role') == 'admin'):
+            data = { 'sales': filtered_sales, 'card_data': card_info }
+        else: 
+            data = {'sales': filtered_sales}
+            
         return Response(data, status = status.HTTP_200_OK)
     
     def post(self, request):
-        values = dict(request.POST.items())
+        values = request.data
         products = Products.objects.all()
 
         for product in products:
             db = Sales()
             db.Date = values['date']
             db.Product = product
-            db.NumberOfSales = values.get(product.name, 0)
-            db.Discount = int(request.POST.get('discount'))
+            db.NumberOfSales = values.get(str(product.id), 0)
+            db.Discount = int(request.POST.get('discount', '0'))
             db.Staff = Staffs.objects.get(id=values['staff'])
             db.save()
             
@@ -249,18 +275,31 @@ class SalesView(APIView):
         
 
     def put(self, request):
-        # Retrieve data from the request
-        sale_id = request.data.get('id')
-        new_quantity_sold = int(request.data.get('quantity_sold'))
-        new_discount = int(request.data.get('discount'))
+        data = request.data
+        print(data)
+        products = Products.objects.all()
 
-        try:
-            sale = Sales.objects.get(id=sale_id)
-            sale.NumberOfSales = new_quantity_sold
-            sale.Discount = new_discount
-            sale.save()
+        for product in products:
+            print(data['date'], data[str(product.id)])
+            db = Sales.objects.get(Date=data['date'], Product__id=product.id, Staff__id=int(data['staff']))
+            print(db)
+            db.NumberOfSales = data.get(str(product.id), 0)
+            db.save()
+       
+        # try:
+        #     sale = Sales.objects.get(id=sale_id)
+        #     sale.NumberOfSales = new_quantity_sold
+        #     sale.Discount = new_discount
+        #     sale.save()
         
-            return Response({'message': 'Sale updated successfully.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Sale updated successfully.'}, status=status.HTTP_200_OK)
         
-        except Sales.DoesNotExist:
-            return Response({'message': 'Sale not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+class DownloadSQLite(APIView):
+    def get(self, request):
+        db_file_path = os.path.join(settings.BASE_DIR, 'db.sqlite3')
+        with open(db_file_path, 'rb') as database_file:
+            response = FileResponse(database_file)
+            response['Content-Type'] = 'application/x-sqlite3'
+            response['Content-Disposition'] = f'attachment; filename="{db_file_path.split("/")[-1]}"'
+            return response

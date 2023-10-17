@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CustomAuthToken, StaffListCreateView, StaffDetailUpdateView, ExpenceListView, ExpenceDetailUpdateView, ReturnListView, ReturnDetailUpdateView, ProductDetailUpdateView, ProductListView, SalesView
+from .views import CustomAuthToken, StaffListCreateView, StaffDetailUpdateView, ExpenceListView, ExpenceDetailUpdateView, ReturnListView, ReturnDetailUpdateView, ProductDetailUpdateView, ProductListView, SalesView, DownloadSQLite
 
 urlpatterns = [
     path('login/', CustomAuthToken.as_view(), name='login'),
@@ -13,4 +13,5 @@ urlpatterns = [
     path('product/', ProductListView.as_view(), name='product_list_view'),
     path('product/<id>/', ProductDetailUpdateView.as_view(), name='product_detail_view'),
     path('sales/', SalesView.as_view(), name='sales_list_view'),
+    path('backup/', DownloadSQLite.as_view(), name='downloadBackup'),
 ]

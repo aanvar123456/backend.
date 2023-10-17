@@ -9,11 +9,13 @@ def get_filtered_sales(request, current_month):
     if role == 'admin':
         sales = Sales.objects.filter(Date__month=current_month).order_by('Date')
 
-        if(request.GET.get('staff_id')):
-            sales = sales.filter(Staff__id = request.GET.get('staff_id'))
+        if(request.GET.get('staff')):
+            if(request.GET.get('staff') != 'All'):
+                sales = sales.filter(Staff__id = request.GET.get('staff'))
     else:
         staff = request.headers.get('staff')
         sales = Sales.objects.filter(Staff__id=staff, Date__month=current_month).order_by('Date')
+    
     return filterSales(sales)
 
 
@@ -62,8 +64,6 @@ def filterSales(data):
     values['profit'] = values['profit'] - 2000
     output.append(values)
 
-    print(output)
-
     return output
 
 
@@ -82,5 +82,5 @@ def getSummary(data, month):
         summary['total_psc'] = summary['total_psc'] + i['totalNumberProducts']
     
     summary['total_profit'] = summary['total_profit'] - summary['total_expence']
-    print(summary)
+   
     return summary
