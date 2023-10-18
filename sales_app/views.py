@@ -280,11 +280,12 @@ class SalesView(APIView):
         products = Products.objects.all()
 
         for product in products:
-            print(data['date'], data[str(product.id)])
-            db = Sales.objects.get(Date=data['date'], Product__id=product.id, Staff__id=int(data['staff']))
-            print(db)
-            db.NumberOfSales = data.get(str(product.id), 0)
-            db.save()
+            try:
+                db = Sales.objects.get(Date=data['date'], Product__id=product.id, Staff__id=int(data['staff']))
+                db.NumberOfSales = data.get(str(product.id), 0)
+                db.save()
+            except:
+                not_found = True
        
         # try:
         #     sale = Sales.objects.get(id=sale_id)
@@ -292,7 +293,10 @@ class SalesView(APIView):
         #     sale.Discount = new_discount
         #     sale.save()
         
-        return Response({'message': 'Sale updated successfully.'}, status=status.HTTP_200_OK)
+        if(not_found):
+            return Response({"message': 'Some data hasn't updated."}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Sale updated successfully.'}, status=status.HTTP_200_OK)
         
 
 class DownloadSQLite(APIView):
