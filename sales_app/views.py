@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.forms.models import model_to_dict
 from django.http import FileResponse
-from django.conf import settings 
+from django.conf import settings
 import os
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -25,7 +25,7 @@ class CustomAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        if(user.username == 'admin'):
+        if(user.username == 'adminshopiz'):
             print(user.username, '-----')
             role = 'admin'
             profile = ''
@@ -49,11 +49,11 @@ class CustomAuthToken(ObtainAuthToken):
 class StaffListCreateView(ListCreateAPIView):
 
     serializer_class = StaffSerializer
-    
+
     def get_queryset(self):
         queryset = Staffs.objects.all()
         return queryset
-    
+
 
     def post(self, request):
         data = request.data
@@ -78,7 +78,7 @@ class StaffDetailUpdateView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = StaffSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
@@ -91,7 +91,7 @@ class StaffDetailUpdateView(RetrieveUpdateDestroyAPIView):
         if not isinstance(data["attachment"],str):
             data['attachment'] = data["attachment"]
         else:
-            data['attachment'] = None    
+            data['attachment'] = None
 
 
         staff = StaffSerializer(instance, data=data)
@@ -101,12 +101,12 @@ class StaffDetailUpdateView(RetrieveUpdateDestroyAPIView):
         if instance:
             return Response("Profile updated successfully", status=status.HTTP_200_OK)
         return Response("Error with request data", status=status.HTTP_400_BAD_REQUEST)
-        
+
 
 class ExpenceListView(ListCreateAPIView):
 
     serializer_class = ExpencesSerializer
-    
+
     def get_queryset(self):
         queryset = Expences.objects.all()
         if(self.request.GET.get('start_date') == '' and self.request.GET.get('end_date') == ''):
@@ -120,7 +120,7 @@ class ExpenceListView(ListCreateAPIView):
         if (self.request.GET.get('search') != ''):
             queryset = queryset.filter(Purchase__icontains = self.request.GET.get('search'))
         return queryset
-    
+
 
     def post(self, request):
         data = request.data
@@ -128,7 +128,7 @@ class ExpenceListView(ListCreateAPIView):
         expence.is_valid()
         expence.save()
         return Response('Expence added successfully.', status=status.HTTP_201_CREATED)
-    
+
 
 class ExpenceDetailUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Expences.objects.all()
@@ -139,7 +139,7 @@ class ExpenceDetailUpdateView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = ExpencesSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
@@ -151,12 +151,12 @@ class ExpenceDetailUpdateView(RetrieveUpdateDestroyAPIView):
         if instance:
             return Response("Expence updated successfully", status=status.HTTP_200_OK)
         return Response("Error with request data", status=status.HTTP_400_BAD_REQUEST)
-    
-    
+
+
 class ReturnListView(ListCreateAPIView):
 
     serializer_class = ReturnSerializer
-    
+
     def get_queryset(self):
         queryset = Returns.objects.all()
         if(self.request.GET.get('start_date') == '' and self.request.GET.get('end_date') == ''):
@@ -170,7 +170,7 @@ class ReturnListView(ListCreateAPIView):
         if (self.request.GET.get('search') != ''):
             queryset = queryset.filter(Description__icontains = self.request.GET.get('search'))
         return queryset
-    
+
 
     def post(self, request):
         data = request.data
@@ -179,7 +179,7 @@ class ReturnListView(ListCreateAPIView):
         returns.is_valid()
         returns.save()
         return Response('Return added successfully.', status=status.HTTP_201_CREATED)
-    
+
 
 class ReturnDetailUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Returns.objects.all()
@@ -190,7 +190,7 @@ class ReturnDetailUpdateView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = ReturnSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
@@ -202,16 +202,16 @@ class ReturnDetailUpdateView(RetrieveUpdateDestroyAPIView):
         if instance:
             return Response("Return updated successfully", status=status.HTTP_200_OK)
         return Response("Error with request data", status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class ProductListView(ListCreateAPIView):
 
     serializer_class = ProductSerializer
-    
+
     def get_queryset(self):
         queryset = Products.objects.all()
         return queryset
-    
+
 
     def post(self, request):
         data = request.data
@@ -219,7 +219,7 @@ class ProductListView(ListCreateAPIView):
         product.is_valid()
         product.save()
         return Response('Product added successfully.', status=status.HTTP_201_CREATED)
-    
+
 
 class ProductDetailUpdateView(RetrieveUpdateDestroyAPIView):
     queryset = Products.objects.all()
@@ -230,7 +230,7 @@ class ProductDetailUpdateView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         serializer = ProductSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
@@ -242,7 +242,7 @@ class ProductDetailUpdateView(RetrieveUpdateDestroyAPIView):
         if instance:
             return Response("Product updated successfully", status=status.HTTP_200_OK)
         return Response("Error with request data", status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class SalesView(APIView):
 
@@ -253,11 +253,11 @@ class SalesView(APIView):
 
         if (request.headers.get('role') == 'admin'):
             data = { 'sales': filtered_sales, 'card_data': card_info }
-        else: 
+        else:
             data = {'sales': filtered_sales}
-            
+
         return Response(data, status = status.HTTP_200_OK)
-    
+
     def post(self, request):
         values = request.data
         products = Products.objects.all()
@@ -270,9 +270,9 @@ class SalesView(APIView):
             db.Discount = int(request.POST.get('discount', '0'))
             db.Staff = Staffs.objects.get(id=values['staff'])
             db.save()
-            
+
         return Response({'message': 'Sale Created successfully.'}, status=status.HTTP_200_OK)
-        
+
 
     def put(self, request):
         data = request.data
@@ -280,20 +280,24 @@ class SalesView(APIView):
         products = Products.objects.all()
 
         for product in products:
-            print(data['date'], data[str(product.id)])
-            db = Sales.objects.get(Date=data['date'], Product__id=product.id, Staff__id=int(data['staff']))
-            print(db)
-            db.NumberOfSales = data.get(str(product.id), 0)
-            db.save()
-       
+            try:
+                db = Sales.objects.get(Date=data['date'], Product__id=product.id, Staff__id=int(data['staff']))
+                db.NumberOfSales = data.get(str(product.id), 0)
+                db.save()
+            except:
+                not_found = True
+
         # try:
         #     sale = Sales.objects.get(id=sale_id)
         #     sale.NumberOfSales = new_quantity_sold
         #     sale.Discount = new_discount
         #     sale.save()
-        
-        return Response({'message': 'Sale updated successfully.'}, status=status.HTTP_200_OK)
-        
+
+        if(not_found):
+            return Response({"message': 'Some data hasn't updated."}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Sale updated successfully.'}, status=status.HTTP_200_OK)
+
 
 class DownloadSQLite(APIView):
     def get(self, request):
