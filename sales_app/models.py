@@ -61,13 +61,13 @@ class Products(models.Model):
 
 class Sales(models.Model):
     Date = models.DateField()
-    Product = models.ForeignKey(Products, on_delete=models.SET('Deleted'))
+    Product = models.ForeignKey(Products, on_delete=models.CASCADE)
     NumberOfSales = models.IntegerField(null=True, blank=True)
     Total = models.IntegerField(null=True, blank=True)
     Discount = models.IntegerField(default=0, blank=True)
     Profit = models.IntegerField(null=True, blank=True)
-    Staff = models.ForeignKey(Staffs, on_delete=models.SET('Deleted'))
-                              
+    Staff = models.ForeignKey(Staffs, on_delete=models.CASCADE)
+
     def save(self, *args, **kwargs):
         self.Total = (int(self.NumberOfSales) * int(self.Product.sellingPrice)) - int(self.Discount)
         self.Profit  = int(self.Total) -  (int(self.NumberOfSales) * int(self.Product.purchacePrice))
