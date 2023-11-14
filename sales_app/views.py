@@ -278,6 +278,7 @@ class SalesView(APIView):
         data = request.data
         print(data)
         products = Products.objects.all()
+        not_found = False
 
         for product in products:
             try:

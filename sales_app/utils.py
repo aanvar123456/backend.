@@ -37,7 +37,14 @@ def filterSales(data):
             values['profit'] = sales.Profit + values['profit']
         else:
             if sales.Date.isoformat() != values['date']:
-                values['profit'] = values['profit']
+                try:
+                    expence = Expences.objects.filter(Date=values['date']).aggregate(Sum('Amount'))
+                    values['expence'] = expence['Amount__sum']
+                    values['profit'] = values['profit']
+                    values['total_profit'] = values['profit'] - expence['Amount__sum']
+                except:
+                    values['profit'] = values['profit']
+                    values['total_profit'] = values['profit']
                 output.append(values)
                 values = {'totalNumberProducts': 0, 'totalSale_rs': 0, 'profit': 0}
                 values['date'] = sales.Date.isoformat()
@@ -61,7 +68,12 @@ def filterSales(data):
                 values['totalSale_rs'] = sales.Total + values['totalSale_rs']
 
 
-    # values['profit'] = values['profit'] - 2000
+    try:
+        expence = Expences.objects.filter(Date=values['date']).aggregate(Sum('Amount'))
+        values['expence'] = expence['Amount__sum']
+        values['total_profit'] = values['profit'] - expence['Amount__sum']
+    except:
+        values['total_profit'] = values['profit']
     output.append(values)
 
     return output
