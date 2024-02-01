@@ -54,27 +54,27 @@ class Products(models.Model):
 
     def __str__(self):
         return self.name + ' ' + self.vendor
-    
+
     class Meta:
         db_table = 'products'
 
 
 class Sales(models.Model):
     Date = models.DateField()
-    Product = models.ForeignKey(Products, on_delete=models.SET('Deleted'))
+    Product = models.ForeignKey(Products, on_delete=models.CASCADE)
     NumberOfSales = models.IntegerField(null=True, blank=True)
     Total = models.IntegerField(null=True, blank=True)
     Discount = models.IntegerField(default=0, blank=True)
     Profit = models.IntegerField(null=True, blank=True)
-    Staff = models.ForeignKey(Staffs, on_delete=models.SET('Deleted'))
-                              
+    Staff = models.ForeignKey(Staffs, on_delete=models.CASCADE)
+
     def save(self, *args, **kwargs):
         self.Total = (int(self.NumberOfSales) * int(self.Product.sellingPrice)) - int(self.Discount)
         self.Profit  = int(self.Total) -  (int(self.NumberOfSales) * int(self.Product.purchacePrice))
-        super().save(*args, **kwargs)                            
+        super().save(*args, **kwargs)
 
     class Meta:
-        db_table = 'Sales'
+        db_table = 'Sale'
 
     def __str__(self):
         return self.Date.isoformat() + ' ' + self.Staff.firstName

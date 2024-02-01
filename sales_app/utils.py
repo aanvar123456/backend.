@@ -15,7 +15,7 @@ def get_filtered_sales(request, current_month):
     else:
         staff = request.headers.get('staff')
         sales = Sales.objects.filter(Staff__id=staff, Date__month=current_month).order_by('Date')
-    
+
     return filterSales(sales)
 
 
@@ -37,7 +37,14 @@ def filterSales(data):
             values['profit'] = sales.Profit + values['profit']
         else:
             if sales.Date.isoformat() != values['date']:
-                values['profit'] = values['profit'] - 2000
+                try:
+                    expence = Expences.objects.filter(Date=values['date']).aggregate(Sum('Amount'))
+                    values['expence'] = expence['Amount__sum']
+                    values['profit'] = values['profit']
+                    values['total_profit'] = values['profit'] - expence['Amount__sum']
+                except:
+                    values['profit'] = values['profit']
+                    values['total_profit'] = values['profit']
                 output.append(values)
                 values = {'totalNumberProducts': 0, 'totalSale_rs': 0, 'profit': 0}
                 values['date'] = sales.Date.isoformat()
@@ -46,7 +53,7 @@ def filterSales(data):
                     values['totalNumberProducts'] = sales.NumberOfSales + values['totalNumberProducts']
                 else:
                     values[sales.Product.id] = sales.NumberOfSales
-                    values['totalNumberProducts'] = sales.NumberOfSales + values['totalNumberProducts']                
+                    values['totalNumberProducts'] = sales.NumberOfSales + values['totalNumberProducts']
                 values['totalSale_rs'] = sales.Total + values['totalSale_rs']
                 values['profit'] = sales.Profit + values['profit']
 
@@ -60,8 +67,13 @@ def filterSales(data):
                 values['profit'] = sales.Profit + values['profit']
                 values['totalSale_rs'] = sales.Total + values['totalSale_rs']
 
-    
-    values['profit'] = values['profit'] - 2000
+
+    try:
+        expence = Expences.objects.filter(Date=values['date']).aggregate(Sum('Amount'))
+        values['expence'] = expence['Amount__sum']
+        values['total_profit'] = values['profit'] - expence['Amount__sum']
+    except:
+        values['total_profit'] = values['profit']
     output.append(values)
 
     return output
@@ -80,7 +92,7 @@ def getSummary(data, month):
         summary['total_income'] = summary['total_income'] + i['totalSale_rs']
         summary['total_profit'] = summary['total_profit'] + i['profit']
         summary['total_psc'] = summary['total_psc'] + i['totalNumberProducts']
-    
+
     summary['total_profit'] = summary['total_profit'] - summary['total_expence']
-   
+
     return summary
