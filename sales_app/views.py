@@ -108,7 +108,7 @@ class ExpenceListView(ListCreateAPIView):
     serializer_class = ExpencesSerializer
 
     def get_queryset(self):
-        queryset = Expences.objects.all()
+        queryset = Expences.objects.all().order_by('Date')
         if(self.request.GET.get('start_date') == '' and self.request.GET.get('end_date') == ''):
             queryset = queryset.filter(Date__month = datetime.now().month)
         if (self.request.GET.get('start_date') != '' and self.request.GET.get('end_date') != ''):
